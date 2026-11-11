@@ -1,0 +1,196 @@
+{
+  "_comment": "Canonical technology names and writing rules. validate.py enforces these mechanically. Edit here, never in a prompt.",
+  "canonical": {
+    "React.js": [
+      "ReactJS",
+      "React JS",
+      "Reactjs",
+      "React"
+    ],
+    "Node.js": [
+      "NodeJS",
+      "Node JS",
+      "Nodejs"
+    ],
+    "Next.js": [
+      "NextJS",
+      "Next JS",
+      "Nextjs"
+    ],
+    "Vue.js": [
+      "VueJS",
+      "Vue JS",
+      "Vuejs"
+    ],
+    "Express.js": [
+      "ExpressJS",
+      "Express JS",
+      "Expressjs"
+    ],
+    "Angular.js": [
+      "AngularJS",
+      "Angular JS"
+    ],
+    "HTML5": [
+      "HTML 5"
+    ],
+    "CSS3": [
+      "CSS 3"
+    ],
+    "PostgreSQL": [
+      "Postgres",
+      "PostgresQL",
+      "postgreSQL"
+    ],
+    "MySQL": [
+      "MySql",
+      "mySQL"
+    ],
+    "MongoDB": [
+      "Mongo DB",
+      "MongoDb"
+    ],
+    "RESTful APIs": [
+      "REST APIs",
+      "Restful APIs",
+      "RESTFul APIs"
+    ],
+    "FastAPI": [
+      "Fast API",
+      "FastApi"
+    ],
+    "GitHub": [
+      "Github",
+      "github"
+    ],
+    "JavaScript": [
+      "Javascript",
+      "javascript",
+      "JS"
+    ],
+    "TypeScript": [
+      "Typescript"
+    ],
+    "Tailwind CSS": [
+      "TailwindCSS",
+      "Tailwind"
+    ],
+    "ChromaDB": [
+      "Chroma DB",
+      "ChromaDb"
+    ],
+    "PgVector": [
+      "pgvector",
+      "PGVector"
+    ],
+    "Laravel": [
+      "laravel"
+    ],
+    "Python": [
+      "python"
+    ],
+    "Docker": [
+      "docker"
+    ]
+  },
+  "_protected_comment": "Exact strings that must survive verbatim - a rule that alters one of these is a bug. 'Tailwind CSS' is here because a blind CSS->CSS3 rewrite once corrupted it to 'Tailwind CSS3'. Keep this list GENERIC: your own institutions, employers, certificate names, issuers and project titles are protected automatically, read straight out of core/master-cv.json by validate.py, so they do not belong here.",
+  "protected": [
+    "Tailwind CSS",
+    "Retrieval-Augmented Generation (RAG)"
+  ],
+  "_forbidden_comment": "Strings that must never appear anywhere in a generated CV.",
+  "forbidden": [
+    "Tailwind CSS3",
+    "Tailwind CSS 3",
+    "ReactJS",
+    "front-end end",
+    "back-end end"
+  ],
+  "_hyphenation_comment": "'front-end'/'back-end' ONLY when directly modifying a noun. Standalone noun = 'front end'/'back end'.",
+  "hyphenation": {
+    "compounds": [
+      "front",
+      "back"
+    ],
+    "nouns_requiring_hyphen": [
+      "components",
+      "component",
+      "layers",
+      "layer",
+      "developer",
+      "development",
+      "services",
+      "service",
+      "logic",
+      "code",
+      "work",
+      "engineer",
+      "engineering",
+      "frameworks",
+      "framework",
+      "technologies",
+      "skills",
+      "architecture",
+      "stack"
+    ],
+    "noun_contexts_requiring_space": [
+      "on the",
+      "a React",
+      "a Next.js",
+      "a Vue.js",
+      "a Node.js",
+      "and a",
+      "the"
+    ]
+  },
+  "_known_technologies_comment": "Technologies NOT in the master CV. The factual guard rejects any of these if a model slips one in. Add to this list as new buzzwords appear; it is a denylist, not a skill list.",
+  "known_technologies": [
+    "Kubernetes",
+    "AWS",
+    "Azure",
+    "GCP",
+    "Terraform",
+    "Jenkins",
+    "Django",
+    "Flask",
+    "Spring Boot",
+    "Spring",
+    ".NET",
+    "C#",
+    "Ruby on Rails",
+    "Go",
+    "Rust",
+    "Kotlin",
+    "Swift",
+    "Redis",
+    "Elasticsearch",
+    "GraphQL",
+    "Kafka",
+    "RabbitMQ",
+    "Firebase",
+    "Supabase",
+    "Svelte",
+    "Nuxt.js",
+    "Jest",
+    "Cypress",
+    "Selenium",
+    "Kubernetes",
+    "OpenAI",
+    "LangChain",
+    "Pinecone",
+    "Weaviate",
+    "TensorFlow",
+    "PyTorch",
+    "scikit-learn",
+    "Pandas",
+    "NumPy",
+    "Claude Code",
+    "Jira",
+    "Figma",
+    "Shopify",
+    "WordPress",
+    "Webpack",
+    "Vite",
+    "Redux"
+  ]
+}

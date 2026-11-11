@@ -1,0 +1,79 @@
+{
+  "_comment": "EXAMPLE ONLY - a fictional persona so a fresh clone can run end to end before you have a master of your own. Nothing here is real. Replace it by opening the dashboard and running Setup, which writes your own core/master-cv.json. You can also copy this file to core/master-cv.json and edit it by hand.",
+
+  "contact": {
+    "name": "Jordan Avery",
+    "nationality": "Example",
+    "address": "Springfield, Example",
+    "email": "jordan.avery@example.com",
+    "phone": "+1 555 0100",
+    "links": [
+      { "label": "LinkedIn",  "url": "https://www.linkedin.com/in/example-jordan-avery/" },
+      { "label": "GitHub",    "url": "https://github.com/example-jordan-avery" },
+      { "label": "Portfolio", "url": "https://jordan-avery.example.com" }
+    ]
+  },
+
+  "headline": "Full-Stack Developer | Web Applications | API Design",
+
+  "summary": "Full-Stack Developer with hands-on experience building and maintaining web applications end to end. Comfortable across the front end and the back end, with working knowledge of relational databases, RESTful APIs and version control. Focused on readable code, predictable releases and features that solve a stated business problem rather than an imagined one.",
+
+  "core_competencies": [
+    "Web Development", "Backend Architecture", "Frontend Development",
+    "Database Design", "API Integration", "Version Control",
+    "Object-Oriented Programming", "Debugging and Code Maintenance"
+  ],
+
+  "experience": [
+    {
+      "role": "Web Developer",
+      "company": "Example Software Co.",
+      "dates": "March 2024 – Present",
+      "bullets": [
+        "Built and shipped internal web applications using Laravel and MySQL, taking features from written requirement through to release.",
+        "Developed responsive interfaces with React.js and Tailwind CSS, keeping behaviour consistent across browsers and screen sizes.",
+        "Designed and documented RESTful APIs consumed by both the web client and a third-party reporting tool.",
+        "Reduced page load times by profiling slow database queries and adding the indexes the query plans showed were missing.",
+        "Managed branches, reviews and releases in Git and GitHub as part of a four-developer team."
+      ]
+    }
+  ],
+
+  "education": [
+    {
+      "degree": "Bachelor of Science in Computer Science",
+      "institution": "Example State University",
+      "date": "June 2023"
+    }
+  ],
+
+  "certificates": [
+    { "name": "Example Cloud Practitioner", "issuer": "Example Certification Board", "date": "January 2024" }
+  ],
+
+  "projects": [
+    {
+      "title": "Inventory Tracker (Full-Stack Application)",
+      "date": "August 2024",
+      "description": "Built a stock-tracking tool for a small retailer, covering purchase orders, stock levels and low-stock alerts. Modelled the schema in PostgreSQL and exposed the data through a RESTful API consumed by a React.js front end.",
+      "tech": "Frontend: React.js, Tailwind CSS, Backend: Node.js, Express.js, RESTful APIs, Database: PostgreSQL."
+    },
+    {
+      "title": "Recipe Search API",
+      "date": "February 2024",
+      "description": "Developed a small search service over a recipe dataset, with filtering by ingredient and dietary tag. Wrote the query layer against MySQL and documented every endpoint before building the client.",
+      "tech": "Backend: Laravel, PHP, RESTful APIs, Database: MySQL."
+    }
+  ],
+
+  "skills": [
+    { "label": "Technical Skills: Frontend", "items": ["React.js", "HTML5", "CSS3", "Tailwind CSS", "Bootstrap"] },
+    { "label": "Backend", "items": ["Laravel", "Node.js", "Express.js", "RESTful APIs"] },
+    { "label": "Programming Languages", "items": ["PHP", "JavaScript", "Python"] },
+    { "label": "Databases", "items": ["MySQL", "PostgreSQL"] },
+    { "label": "Tools & DevOps", "items": ["Git", "GitHub"] },
+    { "label": "Soft Skills", "items": ["Problem Solving", "Teamwork", "Attention to Detail", "Time Management", "Team Communication"] }
+  ],
+
+  "languages": "English (native), Example (basic)."
+}

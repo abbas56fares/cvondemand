@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cvondemand</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  html { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+  /* Tailwind's .flex is a class selector and wins over preflight's [hidden] on equal
+     specificity, so a hidden panel or the empty Result card stayed on screen. */
+  [hidden] { display: none !important; }
+  select, input, textarea { color-scheme: dark; }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body class="bg-slate-950 text-slate-300 min-h-screen overflow-x-hidden">
+
+<header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-xl sticky top-0 z-20">
+  <div class="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3 min-w-0">
+      <span class="w-9 h-9 shrink-0 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-600/30">
+        <i class="fa-solid fa-file-lines text-sm"></i>
+      </span>
+      <div class="min-w-0">
+        <h1 class="text-base md:text-lg font-bold tracking-tight text-slate-100 leading-none">cvondemand</h1>
+        <p class="text-xs text-slate-500 mt-1 truncate">Tailor one CV per position</p>
+      </div>
+    </div>
+    <button id="refresh" class="shrink-0 min-h-[44px] px-3 md:px-4 rounded-lg border border-slate-700 bg-slate-800/60 text-slate-300 text-sm font-medium hover:bg-slate-800 hover:text-white hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 flex items-center gap-2">
+      <i class="fa-solid fa-rotate text-xs"></i><span class="hidden sm:inline">Reload</span>
+    </button>
+  </div>
+  <div class="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-1 -mb-px overflow-x-auto">
+    <button data-tab="setup" class="tab min-h-[44px] px-4 text-sm font-semibold border-b-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded-t-lg flex items-center gap-2 shrink-0">
+      <i class="fa-solid fa-user-pen text-xs"></i>Setup
+    </button>
+    <button data-tab="generate" class="tab min-h-[44px] px-4 text-sm font-semibold border-b-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded-t-lg flex items-center gap-2 shrink-0">
+      <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>Generate
+    </button>
+    <button data-tab="providers" class="tab min-h-[44px] px-4 text-sm font-semibold border-b-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded-t-lg flex items-center gap-2 shrink-0">
+      <i class="fa-solid fa-sliders text-xs"></i>Providers
+    </button>
+    <button data-tab="usage" class="tab min-h-[44px] px-4 text-sm font-semibold border-b-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded-t-lg flex items-center gap-2 shrink-0">
+      <i class="fa-solid fa-gauge-high text-xs"></i>Usage
+    </button>
+  </div>
+</header>
+
+<main class="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+
+  <!-- ───────────────────────── Setup ───────────────────────── -->
+  <section id="panel-setup" hidden class="flex flex-col gap-5 md:gap-6">
+
+    <div id="s-intro" class="rounded-xl border border-indigo-500/40 bg-indigo-500/10 p-4 md:p-5 text-sm text-indigo-200 leading-relaxed">
+      <p class="font-semibold text-indigo-100 mb-1"><i class="fa-solid fa-circle-info mr-2"></i>Build your master CV</p>
+      <p>Paste your CV below, or upload a <code class="font-mono">.docx</code>. The model structures it and
+      rewrites the prose professionally &mdash; it is told not to add a single employer, date, technology or
+      number that your CV does not already contain, and anything it slips in anyway is reported before you
+      save. Your contact details are typed by hand, never guessed.</p>
+      <p class="mt-2">The result is written to <code class="font-mono">core/master-cv.json</code>, which is
+      gitignored and stays on this machine. Every tailored CV is then built from it.</p>
+    </div>
+
+    <div class="bg-slate-900/70 backdrop-blur-md border border-slate-800 rounded-xl p-4 md:p-6 shadow-xl shadow-black/20 flex flex-col gap-5">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+        <div class="min-w-0">
+          <label for="s-provider" class="text-xs font-semibold uppercase tracking-wider text-slate-500 block mb-2">Provider</label>
+          <select id="s-provider" class="w-full min-h-[44px] bg-slate-950 border border-slate-700 rounded-lg px-3 text-sm text-slate-200 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500"></select>
+        </div>
+        <div class="min-w-0">
+          <label for="s-model" class="text-xs font-semibold uppercase tracking-wider text-slate-500 block mb-2">Model</label>
+          <select id="s-model" class="w-full min-h-[44px] bg-slate-950 border border-slate-700 rounded-lg px-3 text-sm text-slate-200 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500"></select>
+        </div>
+      </div>
+      <p id="s-modelnote" class="text-sm text-slate-400 leading-relaxed rounded-lg border border-slate-800 bg-slate-950/60 p-3 -mt-2"></p>
+
+      <fieldset class="min-w-0 border-t border-slate-800 pt-5">
+        <legend class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Your details &mdash; typed, not extracted</legend>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="min-w-0">
+            <label for="s-name" class="text-xs text-slate-500 block mb-1.5">Full name <span class="text-red-400">*</span></label>
+            <input id="s-name" autocomplete="name"
+              class="w-full min-h-[44px] bg-slate-950 border border-slate-700 rounded-lg px-3 text-sm text-slate-200 placeholder:text-slate-600 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500">
+          </div>
+          <div class="min-w-0">
+            <label for="s-email" class="text-xs text-slate-500 block mb-1.5">Email <span class="text-red-400">*</span></label>
+            <input id="s-email" type="email" autocomplete="email" spellcheck="false"
+              class="w-full min-h-[44px] bg-slate-950 border border-slate-700 rounded-lg px-3 text-sm text-slate-200 placeholder:text-slate-600 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500">
+          </div>
+          <div class="min-w-0">
+            <label for="s-phone" class="text-xs text-slate-500 block mb-1.5">Phone <span class="text-red-400">*</span></label>
+            <input id="s-phone" type="tel" autocomplete="tel" spellcheck="false"
+              class="w-full min-h-[44px] bg-slate-950 border border-slate-700 rounded-lg px-3 text-sm text-slate-200 placeholder:text-slate-600 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500">
+          </div>
+          <div class="min-w-0">
+            <label for="s-address" class="text-xs text-slate-500 block mb-1.5">Location</label>
+            <input id="s-address" autocomplete="address-level2"
+              class="w-full min-h-[44px] bg-slate-950 border border-slate-700 rounded-lg px-3 text-sm text-slate-200 placeholder:text-slate-600 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500">
+          </div>
+          <div class="min-w-0">
+            <label for="s-nationality" class="text-xs text-slate-500 block mb-1.5">Nationality</label>
+            <input id="s-nationality"
+              class="w-full min-h-[44px] bg-slate-950 border border-slate-700 rounded-lg px-3 text-sm text-slate-200 placeholder:text-slate-600 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500">
+          </div>
+        </div>
+
+        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mt-5 mb-2">Links</p>
+        <div id="s-links" class="flex flex-col gap-3"></div>
+        <p class="text-xs text-slate-500 mt-2">At least one. Leave a row blank to skip it.</p>
+      </fieldset>
+
+      <fieldset class="min-w-0 border-t border-slate-800 pt-5">
+        <legend class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Your existing CV</legend>
+
+        <label for="s-file" class="text-xs text-slate-500 block mb-1.5">Upload a .docx <span class="text-slate-600">(optional)</span></label>
+        <input id="s-file" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          class="w-full min-h-[44px] bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-400 file:mr-3 file:min-h-[32px] file:px-3 file:rounded-md file:border-0 file:bg-slate-800 file:text-slate-200 file:text-sm file:font-medium hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
+        <p id="s-filenote" class="text-xs text-slate-500 mt-2">A <code class="font-mono">.docx</code> is read locally and appended to whatever you paste below. PDF is not supported &mdash; copy its text out instead.</p>
+
+        <label for="s-raw" class="text-xs text-slate-500 block mt-4 mb-1.5">Or paste it as text</label>
+        <textarea id="s-raw" rows="14" spellcheck="false" placeholder="Paste your whole CV — jobs, dates, education, certificates, projects, skills, languages…"
+          class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-sm text-slate-200 leading-relaxed placeholder:text-slate-600 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 resize-y"></textarea>
+        <p class="text-xs text-slate-500 mt-2">The more complete this is, the less the model has to leave out. It cannot add what is not here.</p>
+      </fieldset>
+
+      <button id="s-go" class="min-h-[48px] px-4 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg shadow-lg shadow-indigo-600/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-wand-magic-sparkles text-xs"></i> Draft my master CV
+      </button>
+      <p class="text-xs text-slate-500 text-center -mt-2">Nothing is written to disk until you save.</p>
+    </div>
+
+    <div id="s-result" hidden class="bg-slate-900/70 backdrop-blur-md border border-slate-800 rounded-xl p-4 md:p-6 shadow-xl shadow-black/20 flex flex-col gap-5 min-w-0">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="min-w-0">
+          <h2 class="text-lg md:text-xl font-semibold text-slate-100">Drafted master CV</h2>
+          <p id="s-meta" class="text-xs text-slate-500 mt-1 font-mono break-all"></p>
+        </div>
+        <span id="s-verdict" class="shrink-0 px-3 py-2 rounded-lg border text-sm font-semibold flex items-center gap-2"></span>
+      </div>
+
+      <ul id="s-violations" hidden class="rounded-lg border border-red-500/40 bg-red-500/10 p-3 flex flex-col gap-1.5 text-sm text-red-300 list-none"></ul>
+
+      <div id="s-body" class="flex flex-col gap-5 min-w-0"></div>
+
+      <div class="min-w-0">
+        <label for="s-json" class="text-xs font-semibold uppercase tracking-wider text-slate-500 block mb-2">Edit before saving</label>
+        <textarea id="s-json" rows="16" spellcheck="false"
+          class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-xs font-mono text-slate-300 leading-relaxed hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 resize-y"></textarea>
+        <p class="text-xs text-slate-500 mt-2">Edits are re-checked when you save. Fix a reported line here and save again.</p>
+      </div>
+
+      <button id="s-save" class="min-h-[48px] px-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg shadow-lg shadow-emerald-600/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-floppy-disk text-xs"></i> Save as my master CV
+      </button>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── Generate ───────────────────────── -->
+  <section id="panel-generate" class="flex flex-col gap-5 md:gap-6">
+    <div class="bg-slate-900/70 backdrop-blur-md border border-slate-800 rounded-xl p-4 md:p-6 shadow-xl shadow-black/20 flex flex-col gap-5">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+        <div class="min-w-0">
+          <label for="f-provider" class="text-xs font-semibold uppercase tracking-wider text-slate-500 block mb-2">Provider</label>
+          <select id="f-provider" class="w-full min-h-[44px] bg-slate-950 border border-slate-700 rounded-lg px-3 text-sm text-slate-200 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500"></select>
+        </div>
+        <div class="min-w-0">
+          <label for="f-model" class="text-xs font-semibold uppercase tracking-wider text-slate-500 block mb-2">Model</label>
+          <select id="f-model" class="w-full min-h-[44px] bg-slate-950 border border-slate-700 rounded-lg px-3 text-sm text-slate-200 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500"></select>
+        </div>
+      </div>
+      <p id="f-modelnote" class="text-sm text-slate-400 leading-relaxed rounded-lg border border-slate-800 bg-slate-950/60 p-3 -mt-2"></p>
+
+      <div class="min-w-0">
+        <label for="f-position" class="text-xs font-semibold uppercase tracking-wider text-slate-500 block mb-2">Job position</label>
+        <input id="f-position" list="position-list" autocomplete="off" spellcheck="false"
+          placeholder="Full-Stack Developer (React.js, Node.js)"
+          class="w-full min-h-[44px] bg-slate-950 border border-slate-700 rounded-lg px-3 text-sm text-slate-200 placeholder:text-slate-600 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500">
+        <datalist id="position-list"></datalist>
+        <p class="text-xs text-slate-500 mt-2">An existing name overwrites that folder. A new name creates one under <code class="font-mono text-slate-400">positions/</code>.</p>
+      </div>
+
+      <div class="min-w-0">
+        <label for="f-jd" class="text-xs font-semibold uppercase tracking-wider text-slate-500 block mb-2">Job description</label>
+        <textarea id="f-jd" rows="10" spellcheck="false" placeholder="Paste the full job description here…"
+          class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-sm text-slate-200 leading-relaxed placeholder:text-slate-600 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 resize-y"></textarea>
+      </div>
+
+      <button id="f-go" class="min-h-[48px] px-4 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg shadow-lg shadow-indigo-600/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-paper-plane text-xs"></i> Generate tailored CV
+      </button>
+      <p class="text-xs text-slate-500 text-center -mt-2">Sent with the repo's locked prompt and rules. Nothing is written to disk until you save.</p>
+    </div>
+
+    <div id="result" hidden class="bg-slate-900/70 backdrop-blur-md border border-slate-800 rounded-xl p-4 md:p-6 shadow-xl shadow-black/20 flex flex-col gap-5 min-w-0">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="min-w-0">
+          <h2 class="text-lg md:text-xl font-semibold text-slate-100">Result</h2>
+          <p id="r-meta" class="text-xs text-slate-500 mt-1 font-mono break-all"></p>
+        </div>
+        <span id="r-verdict" class="shrink-0 px-3 py-2 rounded-lg border text-sm font-semibold flex items-center gap-2"></span>
+      </div>
+
+      <ul id="r-violations" hidden class="rounded-lg border border-red-500/40 bg-red-500/10 p-3 flex flex-col gap-1.5 text-sm text-red-300 list-none"></ul>
+
+      <div id="r-body" class="flex flex-col gap-5 min-w-0"></div>
+
+      <details class="rounded-lg border border-slate-800 bg-slate-950/60">
+        <summary class="min-h-[44px] px-3 flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-400 hover:text-slate-200 select-none">
+          <i class="fa-solid fa-code text-xs"></i> Raw cv.json
+        </summary>
+        <pre id="r-json" class="text-xs font-mono text-slate-400 p-3 pt-0 overflow-x-auto leading-relaxed"></pre>
+      </details>
+
+      <button id="r-save" class="min-h-[48px] px-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg shadow-lg shadow-emerald-600/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-floppy-disk text-xs"></i> Save cv.json and build .docx
+      </button>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── Providers ───────────────────────── -->
+  <section id="panel-providers" hidden>
+    <p class="text-sm text-slate-400 leading-relaxed mb-5 md:mb-6">
+      The lowest priority number runs first when the CLI is used; if it fails on quota or auth, the next
+      <span class="text-slate-200 font-medium">enabled</span> provider is tried. The Generate tab always uses
+      exactly the provider you pick there. Keys are written to
+      <code class="font-mono text-xs text-slate-300 bg-slate-900 border border-slate-800 rounded px-1.5 py-0.5">.env</code>,
+      which is gitignored and never shown back in full.
+    </p>
+    <div id="grid" class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6"></div>
+  </section>
+
+  <!-- ───────────────────────── Usage ───────────────────────── -->
+  <section id="panel-usage" hidden>
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-5 md:mb-6">
+      <p class="text-sm text-slate-400 leading-relaxed max-w-3xl">
+        Two different things are on this page.
+        <span class="text-slate-200 font-medium">Counted here</span> is this tool's own ledger
+        (<code class="font-mono text-xs text-slate-300 bg-slate-900 border border-slate-800 rounded px-1.5 py-0.5">state/usage.jsonl</code>)
+        measured against the limits declared in
+        <code class="font-mono text-xs text-slate-300 bg-slate-900 border border-slate-800 rounded px-1.5 py-0.5">config/providers.json</code> —
+        it never sees calls you made elsewhere.
+        <span class="text-slate-200 font-medium">Live</span> is the provider's own number, and only
+        Groq and OpenRouter have one to give; Google AI Studio publishes no quota endpoint for an API key.
+      </p>
+      <button id="u-reload" class="shrink-0 min-h-[44px] px-4 rounded-lg border border-slate-700 bg-slate-800/60 text-slate-300 text-sm font-medium hover:bg-slate-800 hover:text-white hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 flex items-center gap-2">
+        <i class="fa-solid fa-rotate text-xs"></i>Recount
+      </button>
+    </div>
+    <div id="usage-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6"></div>
+  </section>
+
+</main>
+
+<div id="toasts" class="fixed bottom-4 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2 items-stretch sm:items-end"></div>
+
+<template id="card-tpl">
+  <section class="bg-slate-900/70 backdrop-blur-md border border-slate-800 rounded-xl p-4 md:p-6 shadow-xl shadow-black/20 flex flex-col gap-4 min-w-0">
+    <div class="flex items-start justify-between gap-3">
+      <div class="min-w-0">
+        <h2 class="text-lg md:text-xl font-semibold text-slate-100 truncate" data-label></h2>
+        <div class="flex flex-wrap items-center gap-2 mt-2">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500" data-kind></span>
+          <span class="text-xs font-mono text-slate-500" data-priority></span>
+        </div>
+      </div>
+      <button data-toggle class="shrink-0 min-h-[44px] px-3 rounded-lg border text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/50 flex items-center gap-2"></button>
+    </div>
+
+    <div class="min-w-0">
+      <label class="text-xs font-semibold uppercase tracking-wider text-slate-500 block mb-2">Model</label>
+      <select data-model class="w-full max-w-full min-h-[44px] bg-slate-950 border border-slate-700 rounded-lg px-3 text-sm text-slate-200 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500"></select>
+      <div class="mt-3 rounded-lg border border-slate-800 bg-slate-950/60 p-3">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span data-status class="text-xs font-semibold uppercase tracking-wider"></span>
+        </div>
+        <p data-desc class="text-sm text-slate-400 leading-relaxed"></p>
+      </div>
+    </div>
+
+    <div class="min-w-0">
+      <label class="text-xs font-semibold uppercase tracking-wider text-slate-500 block mb-2">
+        API key <span class="font-mono normal-case tracking-normal text-slate-600" data-env></span>
+      </label>
+      <input data-key type="password" autocomplete="off" spellcheck="false"
+        class="w-full min-h-[44px] bg-slate-950 border border-slate-700 rounded-lg px-3 text-sm text-slate-200 font-mono placeholder:text-slate-600 placeholder:font-sans hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500">
+      <p data-keystate class="text-xs text-slate-500 mt-2 break-all"></p>
+    </div>
+
+    <button data-save class="mt-auto min-h-[44px] px-4 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-medium text-sm rounded-lg shadow-lg shadow-indigo-600/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 flex items-center justify-center gap-2">
+      <i class="fa-solid fa-floppy-disk text-xs"></i> Save
+    </button>
+  </section>
+</template>
+
+<script>
+const STATUS = {
+  ok:          { label: "Working",     cls: "text-emerald-400" },
+  untested:    { label: "Untested",    cls: "text-slate-400"   },
+  limited:     { label: "Limited",     cls: "text-amber-400"   },
+  unavailable: { label: "Unavailable", cls: "text-red-400"     },
+};
+
+let STATE = { providers: [], positions: [], needs_setup: false, contact: {} };
+let RESULT = null;          // the last generated { position, cv, violations, ... }
+let MASTER_DRAFT = null;    // the last drafted { master, raw, provider, ... } from Setup
+
+function toast(message, kind) {
+  const box = document.createElement("div");
+  const tone = kind === "error"
+    ? "border-red-500/40 bg-red-500/10 text-red-300"
+    : "border-emerald-500/40 bg-emerald-500/10 text-emerald-300";
+  box.className = `border ${tone} backdrop-blur-xl rounded-lg px-4 py-3 text-sm shadow-xl shadow-black/40 max-w-sm whitespace-pre-wrap break-words`;
+  box.innerHTML = `<i class="fa-solid ${kind === "error" ? "fa-circle-exclamation" : "fa-circle-check"} mr-2"></i>`;
+  box.append(message);
+  document.getElementById("toasts").append(box);
+  setTimeout(() => box.remove(), kind === "error" ? 12000 : 6000);
+}
+
+/* ───────────────────────── tabs ───────────────────────── */
+
+function showTab(name) {
+  for (const button of document.querySelectorAll(".tab")) {
+    const on = button.dataset.tab === name;
+    const off = button.disabled;
+    button.className = "tab min-h-[44px] px-4 text-sm font-semibold border-b-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded-t-lg flex items-center gap-2 shrink-0 " + (off
+      ? "border-transparent text-slate-700 cursor-not-allowed"
+      : on ? "border-indigo-500 text-slate-100"
+           : "border-transparent text-slate-500 hover:text-slate-300");
+    document.getElementById(`panel-${button.dataset.tab}`).hidden = !on;
+  }
+}
+for (const button of document.querySelectorAll(".tab")) {
+  button.addEventListener("click", () => {
+    if (button.disabled) return;
+    showTab(button.dataset.tab);
+    if (button.dataset.tab === "usage") loadUsage();
+  });
+}
+
+/* Setup is the only tab that works without a master CV, so the rest are locked until
+   one exists. The note explains why rather than leaving a dead tab unexplained. */
+function gateTabs(needsSetup) {
+  for (const button of document.querySelectorAll(".tab")) {
+    const locked = needsSetup && button.dataset.tab !== "setup" && button.dataset.tab !== "providers";
+    button.disabled = locked;
+    button.title = locked ? "Finish Setup first — this reads core/master-cv.json." : "";
+  }
+}
+
+/* ───────────────────────── provider / model picker ─────────────────────────
+   Generate and Setup both need the same provider + model + note trio, so it is built
+   once here and instantiated twice. */
+
+function providerPicker(providerId, modelId, noteId) {
+  const providerSel = document.getElementById(providerId);
+  const modelSel    = document.getElementById(modelId);
+  const note        = document.getElementById(noteId);
+
+  const current = () => STATE.providers.find(p => p.name === providerSel.value);
+
+  function paintNote() {
+    const p = current();
+    const m = p && p.models.find(x => x.id === modelSel.value);
+    const warn = p && !p.key_set ? `No ${p.api_key_env} in .env — add it on the Providers tab first. ` : "";
+    const info = m ? (STATUS[m.status] || STATUS.ok) : STATUS.ok;
+    note.innerHTML = "";
+    if (warn) {
+      const span = document.createElement("span");
+      span.className = "text-red-400 font-medium";
+      span.textContent = warn;
+      note.append(span);
+    }
+    const tag = document.createElement("span");
+    tag.className = `${info.cls} font-semibold uppercase text-xs tracking-wider mr-2`;
+    tag.textContent = info.label;
+    note.append(tag, m ? (m.description || "No description.") : "Pick a provider.");
+  }
+
+  function fillModels() {
+    const p = current();
+    modelSel.replaceChildren();
+    if (!p) return paintNote();
+    for (const m of p.models) {
+      const option = document.createElement("option");
+      option.value = m.id;
+      option.textContent = m.status === "ok" ? m.id : `${m.id} — ${(STATUS[m.status] || STATUS.ok).label.toLowerCase()}`;
+      option.selected = m.id === p.model;
+      modelSel.append(option);
+    }
+    paintNote();
+  }
+
+  function fillProviders(provider_list) {
+    const keep = providerSel.value;
+    providerSel.replaceChildren();
+    for (const p of provider_list) {
+      const option = document.createElement("option");
+      option.value = p.name;
+      option.textContent = p.key_set ? p.label : `${p.label} — no key`;
+      providerSel.append(option);
+    }
+    const first = provider_list.find(p => p.key_set) || provider_list[0];
+    providerSel.value = provider_list.some(p => p.name === keep) ? keep : (first ? first.name : "");
+    fillModels();
+  }
+
+  providerSel.addEventListener("change", fillModels);
+  modelSel.addEventListener("change", paintNote);
+
+  return {
+    fillProviders,
+    get provider() { return providerSel.value; },
+    get model() { return modelSel.value; },
+  };
+}
+
+const genPick   = providerPicker("f-provider", "f-model", "f-modelnote");
+const setupPick = providerPicker("s-provider", "s-model", "s-modelnote");
+
+/* ───────────────────────── generate form ───────────────────────── */
+
+const fPosition = document.getElementById("f-position");
+const fJd       = document.getElementById("f-jd");
+const fGo       = document.getElementById("f-go");
+
+function busy(button, on, label) {
+  button.disabled = on;
+  button.innerHTML = on
+    ? `<i class="fa-solid fa-circle-notch fa-spin text-xs"></i> ${label}`
+    : button.dataset.idle;
+}
+
+fGo.dataset.idle = fGo.innerHTML;
+fGo.addEventListener("click", async () => {
+  const body = {
+    provider: genPick.provider,
+    model: genPick.model,
+    position: fPosition.value.trim(),
+    jd: fJd.value,
+  };
+  if (!body.position) return toast("Enter the job position.", "error");
+  if (!body.jd.trim()) return toast("Paste the job description.", "error");
+
+  busy(fGo, true, "Asking the model… (up to a minute)");
+  try {
+    const response = await fetch("/api/tailor", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+    RESULT = { ...data, jd: body.jd };
+    renderResult(RESULT);
+    loadUsage();   // that call just moved the needle
+    toast(`Tailored via ${data.provider} — ${data.violations.length ? "validation failed" : "validation passed"}`,
+          data.violations.length ? "error" : "ok");
+  } catch (error) {
+    toast(error.message, "error");
+  } finally {
+    busy(fGo, false);
+  }
+});
+
+/* ───────────────────────── result ───────────────────────── */
+
+function block(title, node) {
+  const wrap = document.createElement("div");
+  wrap.className = "min-w-0";
+  const heading = document.createElement("h3");
+  heading.className = "text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2";
+  heading.textContent = title;
+  wrap.append(heading, node);
+  return wrap;
+}
+
+function paragraph(text) {
+  const p = document.createElement("p");
+  p.className = "text-sm text-slate-300 leading-relaxed";
+  p.textContent = text;
+  return p;
+}
+
+function bullets(items) {
+  const ul = document.createElement("ul");
+  ul.className = "flex flex-col gap-1.5 list-disc pl-5 text-sm text-slate-300 leading-relaxed";
+  for (const item of items) {
+    const li = document.createElement("li");
+    li.textContent = item;
+    ul.append(li);
+  }
+  return ul;
+}
+
+function renderResult(data) {
+  const cv = data.cv;
+  document.getElementById("result").hidden = false;
+  document.getElementById("r-meta").textContent = `${data.position} · ${data.provider} · ${data.model || "default model"}`;
+
+  const bad = data.violations.length;
+  const verdict = document.getElementById("r-verdict");
+  verdict.className = "shrink-0 px-3 py-2 rounded-lg border text-sm font-semibold flex items-center gap-2 " + (bad
+    ? "border-red-500/40 bg-red-500/10 text-red-400"
+    : "border-emerald-500/40 bg-emerald-500/10 text-emerald-400");
+  verdict.innerHTML = `<i class="fa-solid ${bad ? "fa-circle-xmark" : "fa-circle-check"} text-xs"></i>`;
+  verdict.append(bad ? `${bad} violation${bad > 1 ? "s" : ""}` : "Validation passed");
+
+  const list = document.getElementById("r-violations");
+  list.hidden = !bad;
+  list.replaceChildren(...data.violations.map(v => {
+    const li = document.createElement("li");
+    li.textContent = v;
+    return li;
+  }));
+
+  const body = document.getElementById("r-body");
+  body.replaceChildren();
+  body.append(block("Headline", paragraph(cv.headline)));
+  body.append(block("Summary", paragraph(cv.summary)));
+  body.append(block("Core competencies", bullets(cv.core_competencies)));
+
+  for (const job of cv.experience) {
+    body.append(block(`${job.role || ""} — ${job.company}`.replace(/^ — /, ""), bullets(job.bullets)));
+  }
+  for (const project of cv.projects) {
+    const wrap = document.createElement("div");
+    wrap.className = "flex flex-col gap-1.5";
+    wrap.append(paragraph(project.description));
+    const tech = document.createElement("p");
+    tech.className = "text-xs font-mono text-slate-500 break-words";
+    tech.textContent = project.tech;
+    wrap.append(tech);
+    body.append(block(project.title, wrap));
+  }
+  for (const group of cv.skills) {
+    body.append(block(group.label, paragraph(group.items.join(" · "))));
+  }
+
+  document.getElementById("r-json").textContent = JSON.stringify(cv, null, 2);
+
+  const save = document.getElementById("r-save");
+  save.disabled = Boolean(bad);
+  save.title = bad ? "Fix validation first — the gate will not render this." : "";
+}
+
+const rSave = document.getElementById("r-save");
+rSave.dataset.idle = rSave.innerHTML;
+rSave.addEventListener("click", async () => {
+  if (!RESULT) return;
+  busy(rSave, true, "Rendering .docx…");
+  try {
+    const response = await fetch("/api/save-cv", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ position: RESULT.position, cv: RESULT.cv, jd: RESULT.jd }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+    STATE.positions = data.positions;
+    fillPositions();
+    toast(`Saved — ${data.saved}`, "ok");
+  } catch (error) {
+    toast(error.message, "error");
+  } finally {
+    busy(rSave, false);
+  }
+});
+
+/* ───────────────────────── providers tab ───────────────────────── */
+
+function paintToggle(button, enabled) {
+  button.dataset.enabled = enabled ? "1" : "0";
+  button.className = "shrink-0 min-h-[44px] px-3 rounded-lg border text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/50 flex items-center gap-2 " + (enabled
+    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+    : "border-slate-700 bg-slate-800/60 text-slate-500 hover:bg-slate-800 hover:text-slate-300");
+  button.innerHTML = `<i class="fa-solid ${enabled ? "fa-circle-check" : "fa-circle-minus"} text-xs"></i>${enabled ? "Enabled" : "Disabled"}`;
+}
+
+function paintModelInfo(card, model) {
+  const info = STATUS[model.status] || STATUS.ok;
+  const statusEl = card.querySelector("[data-status]");
+  statusEl.className = `text-xs font-semibold uppercase tracking-wider ${info.cls}`;
+  statusEl.textContent = info.label;
+  card.querySelector("[data-desc]").textContent = model.description || "No description.";
+}
+
+function buildCard(p) {
+  const card = document.getElementById("card-tpl").content.firstElementChild.cloneNode(true);
+  card.querySelector("[data-label]").textContent = p.label;
+  card.querySelector("[data-kind]").textContent = p.kind.replace(/_/g, " ");
+  card.querySelector("[data-priority]").textContent = `priority ${p.priority}`;
+  card.querySelector("[data-env]").textContent = p.api_key_env;
+
+  const toggle = card.querySelector("[data-toggle]");
+  paintToggle(toggle, p.enabled);
+  toggle.addEventListener("click", () => paintToggle(toggle, toggle.dataset.enabled !== "1"));
+
+  const select = card.querySelector("[data-model]");
+  for (const m of p.models) {
+    const option = document.createElement("option");
+    option.value = m.id;
+    option.textContent = m.status === "ok" ? m.id : `${m.id} — ${(STATUS[m.status] || STATUS.ok).label.toLowerCase()}`;
+    option.selected = m.id === p.model;
+    select.append(option);
+  }
+  const current = () => p.models.find(m => m.id === select.value) || { description: "" };
+  paintModelInfo(card, current());
+  select.addEventListener("change", () => paintModelInfo(card, current()));
+
+  const keyInput = card.querySelector("[data-key]");
+  keyInput.placeholder = p.key_set ? "Replace key (leave blank to keep)" : "Paste the API key";
+  card.querySelector("[data-keystate]").textContent = p.key_set
+    ? `Stored in .env — ${p.key_masked}`
+    : "No key stored yet. This provider cannot run until you add one.";
+
+  card.querySelector("[data-save]").addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    button.classList.add("disabled:opacity-50", "disabled:cursor-not-allowed");
+    try {
+      const response = await fetch("/api/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: p.name,
+          model: select.value,
+          enabled: toggle.dataset.enabled === "1",
+          api_key: keyInput.value,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+      render(data);
+      toast(`${p.label} saved — ${select.value}`, "ok");
+    } catch (error) {
+      toast(error.message, "error");
+      button.disabled = false;
+    }
+  });
+
+  return card;
+}
+
+/* ───────────────────────── usage tab ───────────────────────── */
+
+let USAGE = null;
+
+const fmt = n => (typeof n === "number" ? n.toLocaleString(undefined, { maximumFractionDigits: 4 }) : n);
+
+/** Colour tracks severity, not brand - a bar near its ceiling has to read as a warning. */
+function barTone(pct) {
+  if (pct >= 90) return "bg-red-500";
+  if (pct >= 70) return "bg-amber-500";
+  return "bg-indigo-500";
+}
+
+function barNode(bar) {
+  const wrap = document.createElement("div");
+  wrap.className = "min-w-0";
+
+  const head = document.createElement("div");
+  head.className = "flex items-baseline justify-between gap-3 mb-1";
+  const label = document.createElement("span");
+  label.className = "text-xs font-medium text-slate-400 truncate";
+  label.textContent = bar.label;
+  const value = document.createElement("span");
+  value.className = "text-xs font-mono text-slate-300 shrink-0 tabular-nums";
+  value.textContent = `${fmt(bar.used)} / ${fmt(bar.limit)}`;
+  head.append(label, value);
+
+  const track = document.createElement("div");
+  track.className = "h-2 w-full rounded-full bg-slate-800 overflow-hidden";
+  const fill = document.createElement("div");
+  fill.className = `h-full rounded-full ${barTone(bar.pct)}`;
+  fill.style.width = `${Math.max(bar.pct > 0 ? 2 : 0, bar.pct)}%`;
+  fill.setAttribute("role", "progressbar");
+  fill.setAttribute("aria-label", bar.label);
+  fill.setAttribute("aria-valuenow", String(bar.used));
+  fill.setAttribute("aria-valuemax", String(bar.limit));
+  track.append(fill);
+
+  wrap.append(head, track);
+
+  const foot = [];
+  if (bar.pct !== undefined) foot.push(`${bar.pct}%`);
+  if (bar.resets_in !== undefined && bar.resets_in !== null) {
+    foot.push(`resets in ${bar.resets_in < 60 ? `${bar.resets_in}s` : `${Math.round(bar.resets_in / 60)}m`}`);
+  }
+  if (foot.length) {
+    const note = document.createElement("p");
+    note.className = "text-xs text-slate-600 mt-1 font-mono";
+    note.textContent = foot.join(" · ");
+    wrap.append(note);
+  }
+  return wrap;
+}
+
+function liveBox(title, result) {
+  const box = document.createElement("div");
+  box.className = "rounded-lg border p-3 flex flex-col gap-3 " + (result.supported
+    ? "border-emerald-500/40 bg-emerald-500/5"
+    : "border-slate-800 bg-slate-950/60");
+
+  const head = document.createElement("p");
+  head.className = "text-xs font-semibold uppercase tracking-wider " + (result.supported ? "text-emerald-400" : "text-slate-500");
+  head.textContent = result.supported ? `Live · ${title}` : "No live number";
+  box.append(head);
+
+  for (const bar of result.bars || []) box.append(barNode(bar));
+
+  const note = document.createElement("p");
+  note.className = "text-xs text-slate-500 leading-relaxed";
+  note.textContent = result.supported ? (result.note || "") : (result.reason || "");
+  if (note.textContent) box.append(note);
+  return box;
+}
+
+function modelRow(prov, model) {
+  const row = document.createElement("div");
+  row.className = "rounded-lg border border-slate-800 bg-slate-950/60 p-3 flex flex-col gap-3 min-w-0";
+
+  const head = document.createElement("div");
+  head.className = "flex flex-wrap items-center justify-between gap-2";
+
+  const left = document.createElement("div");
+  left.className = "min-w-0 flex flex-wrap items-center gap-2";
+  const id = document.createElement("span");
+  id.className = "text-sm font-mono text-slate-200 break-all";
+  id.textContent = model.id;
+  left.append(id);
+  if (model.selected) {
+    const tag = document.createElement("span");
+    tag.className = "shrink-0 text-xs font-semibold uppercase tracking-wider text-indigo-400 border border-indigo-500/40 bg-indigo-500/10 rounded px-1.5 py-0.5";
+    tag.textContent = "In use";
+    left.append(tag);
+  }
+  head.append(left);
+
+  // Groq is the only provider whose live numbers are per model, so the per-model probe
+  // button only appears where it would actually tell you something new.
+  if (prov.probe_live && prov.key_set) {
+    const probe = document.createElement("button");
+    probe.className = "shrink-0 min-h-[32px] px-2.5 rounded-lg border border-slate-700 bg-slate-800/60 text-slate-400 text-xs font-medium hover:bg-slate-800 hover:text-white hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 flex items-center gap-1.5";
+    probe.innerHTML = `<i class="fa-solid fa-satellite-dish text-[10px]"></i>`;
+    probe.append("Live");
+    probe.title = `Ask ${prov.label} directly — costs ${prov.probe_cost}.`;
+    probe.addEventListener("click", async () => {
+      probe.disabled = true;
+      probe.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-[10px]"></i>`;
+      probe.append("Asking…");
+      try {
+        const response = await fetch("/api/probe", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ provider: prov.name, model: model.id }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+        const old = row.querySelector("[data-live]");
+        const box = liveBox(model.id, data.probe);
+        box.setAttribute("data-live", "");
+        old ? old.replaceWith(box) : row.append(box);
+        if (!data.probe.supported) toast(data.probe.reason, "error");
+      } catch (error) {
+        toast(error.message, "error");
+      } finally {
+        probe.disabled = false;
+        probe.innerHTML = `<i class="fa-solid fa-satellite-dish text-[10px]"></i>`;
+        probe.append("Live");
+      }
+    });
+    head.append(probe);
+  }
+  row.append(head);
+
+  if (model.bars.length) {
+    const bars = document.createElement("div");
+    bars.className = "flex flex-col gap-2.5";
+    for (const bar of model.bars) bars.append(barNode(bar));
+    row.append(bars);
+  } else {
+    const none = document.createElement("p");
+    none.className = "text-xs text-slate-500 leading-relaxed";
+    none.textContent = "No limit declared for this model, so there is nothing to draw a bar against. "
+      + `Counted so far: ${fmt(model.local.rpd)} request(s) today, ${fmt(model.local.tpd)} token(s).`;
+    row.append(none);
+  }
+
+  const meta = [`${fmt(model.local.requests_total)} call(s) in the last 7 days`];
+  if (model.local.failures) meta.push(`${fmt(model.local.failures)} failed`);
+  if (model.local.last_used) meta.push(`last ${new Date(model.local.last_used * 1000).toLocaleString()}`);
+  if (model.bars.length) meta.push(model.limit_source === "declared" ? "limits declared in config" : "limits unknown");
+  const footer = document.createElement("p");
+  footer.className = "text-xs text-slate-600 leading-relaxed";
+  footer.textContent = meta.join(" · ");
+  row.append(footer);
+
+  return row;
+}
+
+function usageCard(prov) {
+  const card = document.createElement("section");
+  card.className = "bg-slate-900/70 backdrop-blur-md border border-slate-800 rounded-xl p-4 md:p-6 shadow-xl shadow-black/20 flex flex-col gap-4 min-w-0";
+
+  const head = document.createElement("div");
+  head.className = "flex items-start justify-between gap-3";
+  const left = document.createElement("div");
+  left.className = "min-w-0";
+  const title = document.createElement("h2");
+  title.className = "text-lg md:text-xl font-semibold text-slate-100 truncate";
+  title.textContent = prov.label;
+  const sub = document.createElement("p");
+  sub.className = "text-xs text-slate-500 mt-2";
+  sub.textContent = `${fmt(prov.totals.rpd)} request(s) today · ${fmt(prov.totals.tpd)} token(s) · `
+    + (prov.key_set ? (prov.enabled ? "enabled" : "disabled") : "no key stored");
+  left.append(title, sub);
+
+  const badge = document.createElement("span");
+  badge.className = "shrink-0 text-xs font-semibold uppercase tracking-wider rounded-lg border px-2 py-1 " + (prov.probe_live
+    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+    : "border-slate-700 bg-slate-800/60 text-slate-500");
+  badge.textContent = prov.probe_live ? "Has live API" : "Counted here only";
+  head.append(left, badge);
+  card.append(head);
+
+  const selected = prov.models.filter(m => m.selected || m.local.requests_total > 0);
+  const rest = prov.models.filter(m => !selected.includes(m));
+
+  const main = document.createElement("div");
+  main.className = "flex flex-col gap-3";
+  for (const model of (selected.length ? selected : prov.models.slice(0, 1))) main.append(modelRow(prov, model));
+  card.append(main);
+
+  if (rest.length) {
+    const more = document.createElement("details");
+    more.className = "rounded-lg border border-slate-800 bg-slate-950/60";
+    const summary = document.createElement("summary");
+    summary.className = "min-h-[44px] px-3 flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-400 hover:text-slate-200 select-none";
+    summary.innerHTML = `<i class="fa-solid fa-layer-group text-xs"></i>`;
+    summary.append(`${rest.length} other model${rest.length > 1 ? "s" : ""}, unused so far`);
+    const inner = document.createElement("div");
+    inner.className = "flex flex-col gap-3 p-3 pt-0";
+    for (const model of rest) inner.append(modelRow(prov, model));
+    more.append(summary, inner);
+    card.append(more);
+  }
+
+  if (!prov.probe_live) {
+    const why = document.createElement("p");
+    why.className = "text-xs text-slate-500 leading-relaxed";
+    why.textContent = "This provider has no usage endpoint to query, so these bars are this tool's own count.";
+    card.append(why);
+  }
+
+  return card;
+}
+
+function renderUsage(data) {
+  USAGE = data;
+  document.getElementById("usage-grid").replaceChildren(...data.providers.map(usageCard));
+}
+
+async function loadUsage() {
+  try {
+    const response = await fetch("/api/usage");
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+    renderUsage(data);
+  } catch (error) {
+    toast(`Could not read usage: ${error.message}`, "error");
+  }
+}
+
+document.getElementById("u-reload").addEventListener("click", loadUsage);
+
+/* ───────────────────────── setup tab ───────────────────────── */
+
+const LINK_ROWS = ["LinkedIn", "GitHub", "Portfolio"];
+const sFile = document.getElementById("s-file");
+const sRaw  = document.getElementById("s-raw");
+const sGo   = document.getElementById("s-go");
+const sSave = document.getElementById("s-save");
+const sJson = document.getElementById("s-json");
+
+let DOCX_B64 = null;   // the uploaded .docx, base64, never written to disk by the browser
+
+function buildLinkRows() {
+  const box = document.getElementById("s-links");
+  box.replaceChildren(...LINK_ROWS.map(label => {
+    const row = document.createElement("div");
+    row.className = "grid grid-cols-1 sm:grid-cols-[10rem_1fr] gap-2 min-w-0";
+    const l = document.createElement("input");
+    l.className = "min-h-[44px] bg-slate-950 border border-slate-700 rounded-lg px-3 text-sm text-slate-200 placeholder:text-slate-600 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500";
+    l.value = label;
+    l.dataset.linkLabel = "";
+    l.setAttribute("aria-label", `Link ${label} label`);
+    const u = document.createElement("input");
+    u.className = "min-w-0 min-h-[44px] bg-slate-950 border border-slate-700 rounded-lg px-3 text-sm text-slate-200 placeholder:text-slate-600 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500";
+    u.placeholder = "https://…";
+    u.spellcheck = false;
+    u.dataset.linkUrl = "";
+    u.setAttribute("aria-label", `Link ${label} URL`);
+    row.append(l, u);
+    return row;
+  }));
+}
+buildLinkRows();
+
+/* An existing master pre-fills the form, so re-running Setup is an edit, not a retype. */
+function fillContact(contact) {
+  for (const key of ["name", "email", "phone", "address", "nationality"]) {
+    const el = document.getElementById(`s-${key}`);
+    if (el && !el.value) el.value = contact[key] || "";
+  }
+  const links = contact.links || [];
+  if (!links.length) return;
+  const rows = [...document.querySelectorAll("#s-links > div")];
+  links.forEach((link, i) => {
+    const row = rows[i];
+    if (!row) return;
+    const u = row.querySelector("[data-link-url]");
+    if (u.value) return;
+    row.querySelector("[data-link-label]").value = link.label || "";
+    u.value = link.url || "";
+  });
+}
+
+function readContact() {
+  const links = [...document.querySelectorAll("#s-links > div")].map(row => ({
+    label: row.querySelector("[data-link-label]").value.trim(),
+    url: row.querySelector("[data-link-url]").value.trim(),
+  }));
+  return {
+    name: document.getElementById("s-name").value.trim(),
+    email: document.getElementById("s-email").value.trim(),
+    phone: document.getElementById("s-phone").value.trim(),
+    address: document.getElementById("s-address").value.trim(),
+    nationality: document.getElementById("s-nationality").value.trim(),
+    links,
+  };
+}
+
+sFile.addEventListener("change", async () => {
+  const note = document.getElementById("s-filenote");
+  const file = sFile.files && sFile.files[0];
+  DOCX_B64 = null;
+  if (!file) return;
+  if (!file.name.toLowerCase().endsWith(".docx")) {
+    sFile.value = "";
+    return toast("That is not a .docx. Copy the text out and paste it instead.", "error");
+  }
+  const buffer = await file.arrayBuffer();
+  let binary = "";
+  const bytes = new Uint8Array(buffer);
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  DOCX_B64 = btoa(binary);
+  note.textContent = `${file.name} — ${(file.size / 1024).toFixed(0)} KB, read locally. It is appended to whatever you paste below.`;
+});
+
+function paintVerdict(el, count) {
+  el.className = "shrink-0 px-3 py-2 rounded-lg border text-sm font-semibold flex items-center gap-2 " + (count
+    ? "border-red-500/40 bg-red-500/10 text-red-400"
+    : "border-emerald-500/40 bg-emerald-500/10 text-emerald-400");
+  el.innerHTML = `<i class="fa-solid ${count ? "fa-circle-xmark" : "fa-circle-check"} text-xs"></i>`;
+  el.append(count ? `${count} to fix` : "Looks clean");
+}
+
+function paintViolations(el, violations) {
+  el.hidden = !violations.length;
+  el.replaceChildren(...violations.map(v => {
+    const li = document.createElement("li");
+    li.textContent = v;
+    return li;
+  }));
+}
+
+function renderMaster(data) {
+  const m = data.master;
+  document.getElementById("s-result").hidden = false;
+  document.getElementById("s-meta").textContent =
+    `${data.provider} · ${setupPick.model || "default model"} · ${data.raw_chars} chars of source`;
+
+  paintVerdict(document.getElementById("s-verdict"), data.violations.length);
+  paintViolations(document.getElementById("s-violations"), data.violations);
+
+  const body = document.getElementById("s-body");
+  body.replaceChildren();
+  body.append(block("Headline", paragraph(m.headline || "")));
+  body.append(block("Summary", paragraph(m.summary || "")));
+  body.append(block("Core competencies", bullets(m.core_competencies || [])));
+  for (const job of m.experience || []) {
+    body.append(block(`${job.role || ""} — ${job.company || ""} · ${job.dates || ""}`, bullets(job.bullets || [])));
+  }
+  for (const e of m.education || []) {
+    body.append(block("Education", paragraph(`${e.degree} — ${e.institution} · ${e.date}`)));
+  }
+  if ((m.certificates || []).length) {
+    body.append(block("Training and certificates",
+      bullets(m.certificates.map(c => `${c.name} — ${c.issuer} · ${c.date}`))));
+  }
+  for (const project of m.projects || []) {
+    const wrap = document.createElement("div");
+    wrap.className = "flex flex-col gap-1.5";
+    wrap.append(paragraph(project.description || ""));
+    const tech = document.createElement("p");
+    tech.className = "text-xs font-mono text-slate-500 break-words";
+    tech.textContent = project.tech || "";
+    wrap.append(tech);
+    body.append(block(`${project.title || ""} · ${project.date || ""}`, wrap));
+  }
+  for (const group of m.skills || []) {
+    body.append(block(group.label, paragraph((group.items || []).join(" · "))));
+  }
+  body.append(block("Languages", paragraph(m.languages || "")));
+
+  sJson.value = JSON.stringify(m, null, 2);
+}
+
+sGo.dataset.idle = sGo.innerHTML;
+sGo.addEventListener("click", async () => {
+  const contact = readContact();
+  if (!contact.name || !contact.email || !contact.phone) {
+    return toast("Name, email and phone are required — they go in the CV header.", "error");
+  }
+  if (!sRaw.value.trim() && !DOCX_B64) {
+    return toast("Paste your CV text or upload a .docx.", "error");
+  }
+  if (!setupPick.provider) return toast("Pick a provider.", "error");
+
+  busy(sGo, true, "Reading your CV… (up to a minute)");
+  try {
+    const response = await fetch("/api/draft-master", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        provider: setupPick.provider,
+        model: setupPick.model,
+        contact,
+        raw: sRaw.value,
+        docx_b64: DOCX_B64,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+    MASTER_DRAFT = data;
+    renderMaster(data);
+    loadUsage();
+    toast(`Drafted via ${data.provider} — ${data.violations.length ? "review the flagged lines" : "nothing flagged"}`,
+          data.violations.length ? "error" : "ok");
+  } catch (error) {
+    toast(error.message, "error");
+  } finally {
+    busy(sGo, false);
+  }
+});
+
+sSave.dataset.idle = sSave.innerHTML;
+sSave.addEventListener("click", async () => {
+  if (!MASTER_DRAFT) return;
+  let master;
+  try {
+    master = JSON.parse(sJson.value);
+  } catch (error) {
+    return toast(`That JSON does not parse: ${error.message}`, "error");
+  }
+  if (STATE.master_exists && !confirm(
+      "This replaces core/master-cv.json. Your positions and their cv.json files are left alone. Continue?")) {
+    return;
+  }
+
+  busy(sSave, true, "Saving…");
+  try {
+    const response = await fetch("/api/save-master", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ master, raw: MASTER_DRAFT.raw || "", overwrite: true }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+    render(data.state);
+    toast(`Saved — ${data.saved}. The Generate tab is open for business.`, "ok");
+    showTab("generate");
+  } catch (error) {
+    toast(error.message, "error");
+  } finally {
+    busy(sSave, false);
+  }
+});
+
+/* ───────────────────────── wiring ───────────────────────── */
+
+function fillPositions() {
+  document.getElementById("position-list").replaceChildren(...STATE.positions.map(name => {
+    const option = document.createElement("option");
+    option.value = name;
+    return option;
+  }));
+}
+
+function render(data) {
+  STATE = data;
+  document.getElementById("grid").replaceChildren(...data.providers.map(buildCard));
+  genPick.fillProviders(data.providers);
+  setupPick.fillProviders(data.providers);
+  fillPositions();
+  fillContact(data.contact || {});
+  gateTabs(Boolean(data.needs_setup));
+  if (data.needs_setup) showTab("setup");
+}
+
+async function load() {
+  try {
+    const response = await fetch("/api/state");
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+    render(data);
+  } catch (error) {
+    toast(`Could not load settings: ${error.message}`, "error");
+  }
+}
+
+document.getElementById("refresh").addEventListener("click", () => { load(); loadUsage(); });
+showTab("generate");
+load();
+loadUsage();
+</script>
+</body>
+</html>

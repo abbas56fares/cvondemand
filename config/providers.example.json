@@ -1,0 +1,208 @@
+{
+  "_README": "ADD OR EDIT MODELS AND KEYS HERE. This is the shipped example: the dashboard copies it to config/providers.json on first run, and that copy is gitignored so your own choices and key names never get pushed. Never put an API key value in either file - only the NAME of the environment variable that holds it. Values live in .env (gitignored, chmod 600). To enable a provider: get a key, paste it into the provider's card in the dashboard (or add the variable to .env yourself), then flip enabled on. Lower priority number is tried first; on quota/429/auth failure the next enabled provider is tried. 'model' is the one in use; 'models' is the catalogue the dashboard (tools/dashboard.py) lets you pick from. status: untested = nobody has verified this model on your key yet, ok = verified working, limited = reachable but quota or capacity restricted, unavailable = not callable at all.",
+  "providers": {
+    "gemini": {
+      "label": "Google AI Studio (Gemini)",
+      "kind": "gemini",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta",
+      "model": "gemini-3.8-flash",
+      "api_key_env": "GEMINI_API_KEY",
+      "structured_output": true,
+      "usage_probe": "gemini_none",
+      "limits": {
+        "rpm": 10,
+        "rpd": 250,
+        "tpm": 250000
+      },
+      "priority": 1,
+      "enabled": false,
+      "models": [
+        {
+          "id": "gemini-3.8-flash",
+          "status": "untested",
+          "description": "Newest flash generation and the best quality of the flash tier. Slowest to answer (~30s on a CV) and the most likely to return a temporary 503 under load."
+        },
+        {
+          "id": "gemini-3.6-flash",
+          "status": "untested",
+          "description": "Previous flash generation. Noticeably quicker than 3.8 and quieter under load - the sane default when 3.8 keeps returning 503."
+        },
+        {
+          "id": "gemini-3.5-flash",
+          "status": "untested",
+          "description": "Stable older flash. Still strong at structured JSON, and the most consistently available of the lot."
+        },
+        {
+          "id": "gemini-3.5-flash-lite",
+          "status": "untested",
+          "description": "Lite variant: fastest and cheapest of the 3.5 line, with a shallower grasp of long job descriptions. Good for quick re-runs."
+        },
+        {
+          "id": "gemini-3.1-flash-lite",
+          "status": "untested",
+          "description": "Older lite model kept as a low-latency fallback. Weakest rewriting quality here - fine for smoke tests, not for a CV you will send."
+        },
+        {
+          "id": "gemini-3-flash-preview",
+          "status": "untested",
+          "description": "Preview build of the 3.0 flash line. Works, but a preview model can be withdrawn without notice."
+        },
+        {
+          "id": "gemini-flash-latest",
+          "status": "limited",
+          "description": "Floating alias that always points at the current flash model. Convenient, but it moves under you and is the first alias to get rate-limited at peak."
+        },
+        {
+          "id": "gemini-flash-lite-latest",
+          "status": "untested",
+          "description": "Floating alias for the current flash-lite model. Same moving-target caveat, lower demand."
+        },
+        {
+          "id": "gemini-3.1-pro-preview",
+          "status": "limited",
+          "description": "Pro tier - the strongest reasoning available on AI Studio. A free key will usually get 429 quota-exceeded here; it wants a billed project."
+        },
+        {
+          "id": "gemini-2.5-pro",
+          "status": "unavailable",
+          "description": "Retired. Google returns 404 'no longer available to new users'. Kept here only so an old config pointing at it is explained rather than mysterious."
+        }
+      ]
+    },
+    "gemini_backup": {
+      "label": "Google AI Studio - second key",
+      "kind": "gemini",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta",
+      "model": "gemini-3.6-flash",
+      "api_key_env": "GEMINI_API_KEY_2",
+      "structured_output": true,
+      "usage_probe": "gemini_none",
+      "limits": {
+        "rpm": 10,
+        "rpd": 250,
+        "tpm": 250000
+      },
+      "priority": 2,
+      "enabled": false,
+      "models": [
+        {
+          "id": "gemini-3.8-flash",
+          "status": "untested",
+          "description": "Newest flash generation and the best quality of the flash tier. Slowest to answer and the most likely to return a temporary 503 under load."
+        },
+        {
+          "id": "gemini-3.6-flash",
+          "status": "untested",
+          "description": "Previous flash generation. Quicker than 3.8 and quieter under load - a good choice for a second key."
+        },
+        {
+          "id": "gemini-3.5-flash",
+          "status": "untested",
+          "description": "Stable older flash. Still strong at structured JSON, and the most consistently available of the lot."
+        },
+        {
+          "id": "gemini-3.5-flash-lite",
+          "status": "untested",
+          "description": "Lite variant: fastest and cheapest of the 3.5 line, with a shallower grasp of long job descriptions."
+        },
+        {
+          "id": "gemini-3.1-flash-lite",
+          "status": "untested",
+          "description": "Older lite model kept as a low-latency fallback. Weakest rewriting quality here."
+        },
+        {
+          "id": "gemini-flash-latest",
+          "status": "limited",
+          "description": "Floating alias that always points at the current flash model. It moves under you and gets rate-limited first at peak."
+        }
+      ]
+    },
+    "groq": {
+      "label": "Groq",
+      "kind": "openai_compatible",
+      "base_url": "https://api.groq.com/openai/v1",
+      "model": "openai/gpt-oss-120b",
+      "api_key_env": "GROQ_API_KEY",
+      "structured_output": true,
+      "usage_probe": "groq_headers",
+      "limits": {
+        "rpd": 1000,
+        "tpm": 8000
+      },
+      "priority": 3,
+      "enabled": false,
+      "models": [
+        {
+          "id": "openai/gpt-oss-120b",
+          "status": "untested",
+          "description": "The strongest model available on Groq for heavy tasks, structured JSON extraction, and reasoning, supporting up to 500 tokens per second."
+        },
+        {
+          "id": "openai/gpt-oss-20b",
+          "status": "untested",
+          "description": "The fastest text model on the platform (~1000 tokens per second), optimized for routing and rapid completions."
+        },
+        {
+          "id": "qwen/qwen3.8-27b",
+          "status": "untested",
+          "description": "Available in preview, this model provides excellent multilingual capabilities and strong performance in structured data extraction."
+        },
+        {
+          "id": "openai/gpt-oss-safeguard-20b",
+          "status": "untested",
+          "description": "Safety-classifier sibling of gpt-oss-20b. Built to judge content against a policy, not to write prose - wrong tool for tailoring a CV."
+        },
+        {
+          "id": "whisper-large-v3-turbo",
+          "status": "unavailable",
+          "description": "A highly accurate and efficient audio transcription model giving up to 8 hours (28,800 seconds) of free processing daily. Audio only - it has no chat endpoint, so it cannot tailor a CV."
+        },
+        {
+          "id": "meta-llama/llama-3.3-70b-versatile",
+          "status": "unavailable",
+          "description": "A highly capable, large-scale general assistant model running at roughly 280 tokens per second. Decommissioned by Groq - it no longer appears on current accounts."
+        },
+        {
+          "id": "meta-llama/llama-3.1-8b-instant",
+          "status": "unavailable",
+          "description": "The highest-volume free option, allowing up to 500,000 tokens per day at blindingly fast inference speeds (~560 tokens per second). Decommissioned by Groq - it no longer appears on current accounts."
+        }
+      ]
+    },
+    "openrouter": {
+      "label": "OpenRouter",
+      "kind": "openai_compatible",
+      "base_url": "https://openrouter.ai/api/v1",
+      "model": "deepseek/deepseek-chat",
+      "api_key_env": "OPENROUTER_API_KEY",
+      "structured_output": true,
+      "usage_probe": "openrouter_key",
+      "limits": {},
+      "priority": 4,
+      "enabled": false,
+      "models": [
+        {
+          "id": "deepseek/deepseek-chat",
+          "status": "untested",
+          "description": "DeepSeek's general chat model. Cheap, solid at structured JSON, and the sensible OpenRouter default."
+        },
+        {
+          "id": "google/gemini-2.0-flash-exp:free",
+          "status": "untested",
+          "description": "Free Gemini flash routed through OpenRouter. Useful as a no-cost fallback when the direct AI Studio key is rate-limited."
+        },
+        {
+          "id": "meta-llama/llama-3.3-70b-instruct",
+          "status": "untested",
+          "description": "Large open-weight general assistant. Slower than the flash models but strong at following a long tailoring brief."
+        },
+        {
+          "id": "qwen/qwen-2.5-72b-instruct",
+          "status": "untested",
+          "description": "Strong multilingual open-weight model with reliable structured output - a good second opinion when a rewrite reads flat."
+        }
+      ]
+    }
+  },
+  "_LIMITS_README": "USAGE BARS. 'usage_probe' says how the dashboard asks a provider for its real numbers: groq_headers = read x-ratelimit-* off a completion (real limit and remaining, per model, but it costs one request); openrouter_key = GET /key, free, account-wide credits; gemini_none = Google AI Studio has no quota endpoint, so nothing can be read. 'limits' is the fallback denominator used when no probe exists - the dashboard counts calls made from this tool (state/usage.jsonl) against it and labels it 'declared'. Keys: rpm/rpd = requests per minute/day, tpm/tpd = tokens per minute/day. Omit a key you do not know rather than guessing; a model block may carry its own 'limits' to override the provider's. Groq's numbers below were read off live headers; Gemini's are the usual free-tier shape and you should correct them against your own AI Studio console."
+}

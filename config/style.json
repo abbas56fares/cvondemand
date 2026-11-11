@@ -1,0 +1,18 @@
+{
+  "_comment": "LOCKED docx geometry: page size, margins, fonts, tab stop and vertical spacing for the rendered CV. These numbers are what keeps every generated .docx identical in layout, so a tailored CV never drifts typographically from the last one. Change them deliberately and re-render an existing position to see the effect before you keep it.",
+  "page":    { "width_in": 8.5, "height_in": 11.0, "margin_in": 0.5 },
+  "font":    { "family": "Calibri", "name_pt": 15, "heading_pt": 11, "body_pt": 10 },
+  "tab_stop_in": 7.5,
+  "link_color": "0563C1",
+  "spacing": {
+    "header_after_pt": 1,
+    "heading_before_pt": 8, "heading_after_pt": 4,
+    "body_after_pt": 3, "bullet_after_pt": 2,
+    "titled_before_pt": 5, "titled_after_pt": 2
+  },
+  "_section_order_comment": "Fixed in render_cv.py, not data-driven. A model cannot reorder these.",
+  "section_order": [
+    "SUMMARY", "CORE COMPETENCIES", "PROFESSIONAL EXPERIENCE", "EDUCATION",
+    "TRAINING AND CERTIFICATES", "PROJECTS", "SKILLS", "LANGUAGES"
+  ]
+}

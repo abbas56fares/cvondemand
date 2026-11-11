@@ -1,0 +1,16 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+state/
+
+# personal data - never pushed
+core/master-cv.json
+core/master-cv.md
+core/original/
+positions/*
+!positions/.gitkeep
+imported/
+config/providers.json
+CLAUDE.local.md
